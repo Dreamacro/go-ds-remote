@@ -3,11 +3,15 @@ package remotestore
 import (
 	"context"
 	"fmt"
+	"io"
+	"io/fs"
+	"os"
 	"sort"
-
-	pb "github.com/ipfs/boxo/filestore/pb"
+	"time"
 
 	dshelp "github.com/ipfs/boxo/datastore/dshelp"
+	"github.com/ipfs/boxo/files"
+	pb "github.com/ipfs/boxo/filestore/pb"
 	cid "github.com/ipfs/go-cid"
 	ds "github.com/ipfs/go-datastore"
 	dsq "github.com/ipfs/go-datastore/query"
@@ -54,6 +58,30 @@ func (s Status) String() string {
 func (s Status) Format() string {
 	return fmt.Sprintf("%-7s", s.String())
 }
+
+var _ files.FileInfo = (*MockFileInfo)(nil)
+
+type MockFileInfo struct {
+	io.ReadCloser
+	MockFileStat *MockFileStat
+	MockAbspath  string
+}
+
+func (m *MockFileInfo) Size() (int64, error) { return m.MockFileStat.Size(), nil }
+func (m *MockFileInfo) AbsPath() string      { return m.MockAbspath }
+func (m *MockFileInfo) Stat() os.FileInfo    { return m.MockFileStat }
+
+type MockFileStat struct {
+	MockName string
+	MockSize int64
+}
+
+func (m *MockFileStat) Name() string       { return m.MockName }
+func (m *MockFileStat) Size() int64        { return m.MockSize }
+func (m *MockFileStat) Mode() fs.FileMode  { return 0o644 }
+func (m *MockFileStat) ModTime() time.Time { return time.Time{} }
+func (m *MockFileStat) IsDir() bool        { return false }
+func (m *MockFileStat) Sys() any           { return nil }
 
 // ListRes wraps the response of the List*() functions, which
 // allows to obtain and verify blocks stored by the FileManager
