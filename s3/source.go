@@ -58,7 +58,7 @@ type SyncFileOptions struct {
 	Key        string
 	Path       string
 
-	// default is `balanced`
+	// default is `default`
 	Chunker string
 
 	// default is `helpers.DefaultLinksPerBlock`
@@ -95,7 +95,7 @@ func (s *Source) SyncFile(ctx context.Context, opts SyncFileOptions) (ipld.Node,
 	params := helpers.DagBuilderParams{
 		Dagserv:    dsrv,
 		Maxlinks:   opts.Maxlinks,
-		CidBuilder: merkledag.V1CidPrefix(),
+		CidBuilder: merkledag.V0CidPrefix(),
 		NoCopy:     true,
 		RawLeaves:  true,
 	}

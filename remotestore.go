@@ -138,7 +138,12 @@ func (f *Remotestore) DeleteBlock(ctx context.Context, c cid.Cid) error {
 func (f *Remotestore) Get(ctx context.Context, c cid.Cid) (blocks.Block, error) {
 	blk, err := f.bs.Get(ctx, c)
 	if ipld.IsNotFound(err) {
-		return f.fm.Get(ctx, c)
+		block, err := f.fm.Get(ctx, c)
+		if err == nil {
+			// cache remote block in local blockstore
+			_ = f.bs.Put(ctx, block)
+		}
+		return block, err
 	}
 	return blk, err
 }

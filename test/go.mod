@@ -6,7 +6,9 @@ replace github.com/Dreamacro/go-ds-remote => ../
 
 require (
 	github.com/Dreamacro/go-ds-remote v0.0.0-20240319150533-27b81f1925aa
+	github.com/gogo/protobuf v1.3.2
 	github.com/ipfs/boxo v0.18.0
+	github.com/ipfs/go-cid v0.4.1
 	github.com/ipfs/go-datastore v0.6.0
 	github.com/minio/madmin-go v1.7.5
 	github.com/minio/minio v0.0.0-20240322200828-15b930be1f9e
@@ -93,7 +95,6 @@ require (
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.3.2 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
@@ -117,7 +118,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/ipfs/bbloom v0.0.4 // indirect
 	github.com/ipfs/go-block-format v0.2.0 // indirect
-	github.com/ipfs/go-cid v0.4.1 // indirect
 	github.com/ipfs/go-ipfs-util v0.0.3 // indirect
 	github.com/ipfs/go-ipld-format v0.6.0 // indirect
 	github.com/ipfs/go-ipld-legacy v0.2.1 // indirect

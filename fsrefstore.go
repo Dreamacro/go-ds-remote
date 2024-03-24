@@ -28,7 +28,7 @@ var RemotestorePrefix = ds.NewKey("remotestore")
 // (a path and an offset).
 type RemoteManager struct {
 	ds     ds.Batching
-	bucket RemoteSource
+	source RemoteSource
 }
 
 // CorruptReferenceError implements the error interface.
@@ -49,8 +49,11 @@ func (c CorruptReferenceError) Error() string {
 // NewRemoteManager initializes a new file manager with the given
 // datastore and root. All FilestoreNodes paths are relative to the
 // root path given here, which is prepended for any operations.
-func NewRemoteManager(ds ds.Batching, bucket RemoteSource) *RemoteManager {
-	return &RemoteManager{ds: dsns.Wrap(ds, RemotestorePrefix), bucket: bucket}
+func NewRemoteManager(ds ds.Batching, source RemoteSource) *RemoteManager {
+	return &RemoteManager{
+		ds:     dsns.Wrap(ds, RemotestorePrefix),
+		source: source,
+	}
 }
 
 // AllKeysChan returns a channel from which to read the keys stored in
@@ -135,7 +138,7 @@ func (f *RemoteManager) GetSize(ctx context.Context, c cid.Cid) (int, error) {
 func (f *RemoteManager) readDataObj(ctx context.Context, m mh.Multihash, d *pb.DataObj) ([]byte, error) {
 	fullpath := filepath.FromSlash(d.GetFilePath())
 
-	reader, err := f.bucket.Get(ctx, fullpath, d.GetOffset(), d.GetSize_())
+	reader, err := f.source.Get(ctx, fullpath, d.GetOffset(), d.GetSize_())
 	if err != nil {
 		return nil, &CorruptReferenceError{StatusFileError, err}
 	}
