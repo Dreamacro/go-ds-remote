@@ -51,7 +51,7 @@ func (s *Source) isSubPath(path string) bool {
 	return !strings.Contains(rel, "..")
 }
 
-func (s *Source) Get(ctx context.Context, abspath string, offset uint64, size uint64) (io.ReadCloser, error) {
+func (s *Source) GetPart(ctx context.Context, abspath string, offset uint64, size uint64) (io.ReadCloser, error) {
 	if !s.isSubPath(abspath) {
 		return nil, &rs.CorruptReferenceError{
 			Code: rs.StatusOtherError,
@@ -81,4 +81,36 @@ func (s *Source) Get(ctx context.Context, abspath string, offset uint64, size ui
 	}
 
 	return &limitReader{f: fi, n: int64(size)}, nil
+}
+
+func (s *Source) Get(ctx context.Context, abspath string) (io.ReadCloser, uint64, error) {
+	if !s.isSubPath(abspath) {
+		return nil, 0, &rs.CorruptReferenceError{
+			Code: rs.StatusOtherError,
+			Err:  errors.New("file not in root path"),
+		}
+	}
+
+	file, err := os.Open(abspath)
+	if os.IsNotExist(err) {
+		return nil, 0, &rs.CorruptReferenceError{
+			Code: rs.StatusFileNotFound,
+			Err:  err,
+		}
+	} else if err != nil {
+		return nil, 0, &rs.CorruptReferenceError{
+			Code: rs.StatusFileError,
+			Err:  err,
+		}
+	}
+
+	fi, err := file.Stat()
+	if err != nil {
+		return nil, 0, &rs.CorruptReferenceError{
+			Code: rs.StatusFileError,
+			Err:  err,
+		}
+	}
+
+	return file, uint64(fi.Size()), nil
 }

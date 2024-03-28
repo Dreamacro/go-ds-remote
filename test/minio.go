@@ -16,7 +16,8 @@ import (
 const (
 	accessKeyID     = "minioadmin"
 	secretAccessKey = "minioadmin"
-	bucket          = "test"
+	bucket1         = "test1"
+	bucket2         = "test2"
 )
 
 func createMinio() (string, func() error, error) {
@@ -65,7 +66,12 @@ func createMinio() (string, func() error, error) {
 		return "", nil, oops.Wrapf(err, "while creating minio client")
 	}
 
-	err = mc.MakeBucket(context.Background(), bucket, mclient.MakeBucketOptions{})
+	err = mc.MakeBucket(context.Background(), bucket1, mclient.MakeBucketOptions{})
+	if err != nil {
+		return "", nil, oops.Wrapf(err, "while creating bucket")
+	}
+
+	err = mc.MakeBucket(context.Background(), bucket2, mclient.MakeBucketOptions{})
 	if err != nil {
 		return "", nil, oops.Wrapf(err, "while creating bucket")
 	}

@@ -10,16 +10,26 @@ package remotestore
 import (
 	"context"
 
+	"github.com/ipfs/boxo/blockservice"
 	blockstore "github.com/ipfs/boxo/blockstore"
+	chunk "github.com/ipfs/boxo/chunker"
+	"github.com/ipfs/boxo/exchange/offline"
 	posinfo "github.com/ipfs/boxo/filestore/posinfo"
+	"github.com/ipfs/boxo/ipld/merkledag"
+	"github.com/ipfs/boxo/ipld/unixfs/importer/balanced"
+	"github.com/ipfs/boxo/ipld/unixfs/importer/helpers"
+	"github.com/ipfs/boxo/ipld/unixfs/importer/trickle"
 	blocks "github.com/ipfs/go-block-format"
 	cid "github.com/ipfs/go-cid"
 	dsq "github.com/ipfs/go-datastore/query"
 	ipld "github.com/ipfs/go-ipld-format"
 	logging "github.com/ipfs/go-log/v2"
+	"github.com/samber/oops"
 )
 
-var logger = logging.Logger("s3store")
+var logger = logging.Logger("remotestore")
+
+var _ blockstore.Blockstore = (*Remotestore)(nil)
 
 // Remotestore implements a Blockstore by combining a standard Blockstore
 // to store regular blocks and a special Blockstore called
@@ -247,4 +257,67 @@ func (f *Remotestore) HashOnRead(enabled bool) {
 	f.bs.HashOnRead(enabled)
 }
 
-var _ blockstore.Blockstore = (*Remotestore)(nil)
+type SyncIndexOptions struct {
+	// default is `default`
+	Chunker string
+
+	// default is `helpers.DefaultLinksPerBlock`
+	Maxlinks int
+
+	// default is "balanced"
+	Layout string
+}
+
+func (f *Remotestore) SyncIndex(ctx context.Context, key string, opts SyncIndexOptions) (ipld.Node, error) {
+	source := f.fm.source
+	rc, size, err := source.Get(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	defer rc.Close()
+
+	chf := &MockFileInfo{
+		MockAbspath: key,
+		Reader:      rc,
+		MockFileStat: &MockFileStat{
+			MockName: key,
+			MockSize: int64(size),
+		},
+	}
+
+	bsrv := blockservice.New(f, offline.Exchange(f))
+	dsrv := merkledag.NewDAGService(bsrv)
+
+	params := helpers.DagBuilderParams{
+		Dagserv:    dsrv,
+		Maxlinks:   opts.Maxlinks,
+		CidBuilder: merkledag.V0CidPrefix(),
+		NoCopy:     true,
+		RawLeaves:  true,
+	}
+	if params.Maxlinks == 0 {
+		params.Maxlinks = helpers.DefaultLinksPerBlock
+	}
+
+	chnk, err := chunk.FromString(chf, opts.Chunker)
+	if err != nil {
+		return nil, oops.Wrapf(err, "failed to create chunker from file")
+	}
+
+	dbh, err := params.New(chnk)
+	if err != nil {
+		return nil, oops.Wrapf(err, "failed to create new dag builder helper")
+	}
+
+	var n ipld.Node
+	switch opts.Layout {
+	case "trickle":
+		n, err = trickle.Layout(dbh)
+	case "balanced", "":
+		n, err = balanced.Layout(dbh)
+	default:
+		return nil, oops.Wrapf(err, "unknown layout: %s", opts.Layout)
+	}
+
+	return n, oops.Wrapf(err, "failed to layout dag")
+}

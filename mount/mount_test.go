@@ -14,8 +14,12 @@ import (
 
 type mockSource struct{}
 
-func (s *mockSource) Get(ctx context.Context, key string, offset uint64, size uint64) (io.ReadCloser, error) {
+func (s *mockSource) GetPart(ctx context.Context, key string, offset uint64, size uint64) (io.ReadCloser, error) {
 	return io.NopCloser(strings.NewReader(key)), nil
+}
+
+func (s *mockSource) Get(ctx context.Context, key string) (io.ReadCloser, uint64, error) {
+	return io.NopCloser(strings.NewReader(key)), uint64(len(key)), nil
 }
 
 func TestSource_Basic(t *testing.T) {
@@ -31,13 +35,13 @@ func TestSource_Basic(t *testing.T) {
 		},
 	})
 
-	r, err := s.Get(ctx, "/foo", 0, 3)
+	r, err := s.GetPart(ctx, "/foo", 0, 3)
 	require.NoError(t, err)
 	v, err := io.ReadAll(r)
 	require.NoError(t, err)
 	require.Equal(t, "/foo", string(v))
 
-	r, err = s.Get(ctx, "/bar/baz", 0, 3)
+	r, err = s.GetPart(ctx, "/bar/baz", 0, 3)
 	require.NoError(t, err)
 	v, err = io.ReadAll(r)
 	require.NoError(t, err)
@@ -53,6 +57,6 @@ func TestSource_HasBadNoMount(t *testing.T) {
 		},
 	})
 
-	_, err := s.Get(ctx, "/foo", 0, 3)
+	_, err := s.GetPart(ctx, "/foo", 0, 3)
 	require.ErrorIs(t, err, ds.ErrNotFound)
 }

@@ -62,7 +62,7 @@ func (s Status) Format() string {
 var _ files.FileInfo = (*MockFileInfo)(nil)
 
 type MockFileInfo struct {
-	io.ReadCloser
+	io.Reader
 	MockFileStat *MockFileStat
 	MockAbspath  string
 }
@@ -70,6 +70,7 @@ type MockFileInfo struct {
 func (m *MockFileInfo) Size() (int64, error) { return m.MockFileStat.Size(), nil }
 func (m *MockFileInfo) AbsPath() string      { return m.MockAbspath }
 func (m *MockFileInfo) Stat() os.FileInfo    { return m.MockFileStat }
+func (m *MockFileInfo) Close() error         { return nil }
 
 type MockFileStat struct {
 	MockName string

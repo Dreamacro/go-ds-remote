@@ -138,7 +138,7 @@ func (f *RemoteManager) GetSize(ctx context.Context, c cid.Cid) (int, error) {
 func (f *RemoteManager) readDataObj(ctx context.Context, m mh.Multihash, d *pb.DataObj) ([]byte, error) {
 	fullpath := filepath.FromSlash(d.GetFilePath())
 
-	reader, err := f.source.Get(ctx, fullpath, d.GetOffset(), d.GetSize_())
+	reader, err := f.source.GetPart(ctx, fullpath, d.GetOffset(), d.GetSize_())
 	if err != nil {
 		return nil, &CorruptReferenceError{StatusFileError, err}
 	}

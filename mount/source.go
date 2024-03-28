@@ -41,10 +41,18 @@ func (s *Source) lookup(key ds.Key) (rs.RemoteSource, ds.Key, ds.Key) {
 	return nil, ds.NewKey("/"), key
 }
 
-func (s *Source) Get(ctx context.Context, key string, offset uint64, size uint64) (io.ReadCloser, error) {
+func (s *Source) GetPart(ctx context.Context, key string, offset uint64, size uint64) (io.ReadCloser, error) {
 	source, _, k := s.lookup(ds.NewKey(key))
 	if source == nil {
 		return nil, ds.ErrNotFound
 	}
-	return source.Get(ctx, k.String(), offset, size)
+	return source.GetPart(ctx, k.String(), offset, size)
+}
+
+func (s *Source) Get(ctx context.Context, key string) (io.ReadCloser, uint64, error) {
+	source, _, k := s.lookup(ds.NewKey(key))
+	if source == nil {
+		return nil, 0, ds.ErrNotFound
+	}
+	return source.Get(ctx, k.String())
 }
