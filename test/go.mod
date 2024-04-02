@@ -10,8 +10,8 @@ require (
 	github.com/ipfs/boxo v0.18.0
 	github.com/ipfs/go-cid v0.4.1
 	github.com/ipfs/go-datastore v0.6.0
-	github.com/minio/madmin-go v1.7.5
-	github.com/minio/minio v0.0.0-20240322200828-15b930be1f9e
+	github.com/minio/madmin-go/v3 v3.0.50
+	github.com/minio/minio v0.0.0-20240402064836-4f660a8eb7ad
 	github.com/minio/minio-go/v7 v7.0.69
 	github.com/samber/oops v1.10.1
 	github.com/stretchr/testify v1.9.0
@@ -171,11 +171,10 @@ require (
 	github.com/minio/filepath v1.0.0 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/minio/kms-go/kes v0.3.0 // indirect
-	github.com/minio/madmin-go/v3 v3.0.50 // indirect
 	github.com/minio/mc v0.0.0-20240313235157-2508db9c560c // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/minio/mux v1.9.0 // indirect
-	github.com/minio/pkg/v2 v2.0.11 // indirect
+	github.com/minio/pkg/v2 v2.0.14 // indirect
 	github.com/minio/selfupdate v0.6.0 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/minio/simdjson-go v0.4.5 // indirect
@@ -224,6 +223,7 @@ require (
 	github.com/prometheus/common v0.50.0 // indirect
 	github.com/prometheus/procfs v0.13.0 // indirect
 	github.com/prometheus/prom2json v1.3.3 // indirect
+	github.com/puzpuzpuz/xsync/v3 v3.1.0 // indirect
 	github.com/rabbitmq/amqp091-go v1.9.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rivo/tview v0.0.0-20240307173318-e804876934a1 // indirect
