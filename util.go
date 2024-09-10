@@ -67,9 +67,11 @@ type MockFileInfo struct {
 	MockAbspath  string
 }
 
-func (m *MockFileInfo) Size() (int64, error) { return m.MockFileStat.Size(), nil }
 func (m *MockFileInfo) AbsPath() string      { return m.MockAbspath }
 func (m *MockFileInfo) Stat() os.FileInfo    { return m.MockFileStat }
+func (m *MockFileInfo) Size() (int64, error) { return m.MockFileStat.Size(), nil }
+func (m *MockFileInfo) ModTime() time.Time   { return m.MockFileStat.ModTime() }
+func (m *MockFileInfo) Mode() fs.FileMode    { return m.MockFileStat.Mode() }
 func (m *MockFileInfo) Close() error         { return nil }
 
 type MockFileStat struct {
