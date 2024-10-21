@@ -56,12 +56,6 @@ func NewRemoteManager(ds ds.Batching, source RemoteSource) *RemoteManager {
 	}
 }
 
-// SetDatastore is a rabbit hole for crdt datastores. Callers should
-// know what they are doing.
-func (f *RemoteManager) SetDatastore(ds ds.Batching) {
-	f.ds = dsns.Wrap(ds, RemotestorePrefix)
-}
-
 // AllKeysChan returns a channel from which to read the keys stored in
 // the FileManager. If the given context is cancelled the channel will be
 // closed.
