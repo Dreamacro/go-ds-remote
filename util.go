@@ -77,12 +77,13 @@ func (m *MockFileInfo) Close() error         { return nil }
 type MockFileStat struct {
 	MockName string
 	MockSize int64
+	MockTime time.Time
 }
 
 func (m *MockFileStat) Name() string       { return m.MockName }
 func (m *MockFileStat) Size() int64        { return m.MockSize }
 func (m *MockFileStat) Mode() fs.FileMode  { return 0o644 }
-func (m *MockFileStat) ModTime() time.Time { return time.Time{} }
+func (m *MockFileStat) ModTime() time.Time { return m.MockTime }
 func (m *MockFileStat) IsDir() bool        { return false }
 func (m *MockFileStat) Sys() any           { return nil }
 

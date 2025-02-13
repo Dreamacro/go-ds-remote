@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	rs "github.com/Dreamacro/go-ds-remote"
-
 	ds "github.com/ipfs/go-datastore"
 )
 

@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	rs "github.com/Dreamacro/go-ds-remote"
-
 	blockstore "github.com/ipfs/boxo/blockstore"
 	posinfo "github.com/ipfs/boxo/filestore/posinfo"
 	dag "github.com/ipfs/boxo/ipld/merkledag"

@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/Dreamacro/go-ds-remote/mount"
-
 	ds "github.com/ipfs/go-datastore"
 	"github.com/stretchr/testify/require"
 )

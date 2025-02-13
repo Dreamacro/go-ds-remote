@@ -269,13 +269,32 @@ type SyncIndexOptions struct {
 }
 
 func (f *Remotestore) SyncIndex(ctx context.Context, key string, opts SyncIndexOptions) (ipld.Node, error) {
-	source := f.fm.source
-	rc, size, err := source.Get(ctx, key)
+	ch, _, err := f.SyncIndexAsync(ctx, key, opts)
 	if err != nil {
 		return nil, err
 	}
-	defer rc.Close()
 
+	res, ok := <-ch
+	if !ok {
+		return nil, oops.Errorf("sync index failed")
+	}
+
+	return res.Node, res.Err
+}
+
+type SyncResult struct {
+	Node ipld.Node
+	Err  error
+}
+
+func (f *Remotestore) SyncIndexAsync(ctx context.Context, key string, opts SyncIndexOptions) (<-chan SyncResult, *Progress, error) {
+	source := f.fm.source
+	rc, size, err := source.Get(ctx, key)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	progress, rc := newProgress(key, size, rc)
 	chf := &MockFileInfo{
 		MockAbspath: key,
 		Reader:      rc,
@@ -301,23 +320,39 @@ func (f *Remotestore) SyncIndex(ctx context.Context, key string, opts SyncIndexO
 
 	chnk, err := chunk.FromString(chf, opts.Chunker)
 	if err != nil {
-		return nil, oops.Wrapf(err, "failed to create chunker from file")
+		rc.Close()
+		return nil, nil, oops.Wrapf(err, "failed to create chunker from file")
 	}
 
 	dbh, err := params.New(chnk)
 	if err != nil {
-		return nil, oops.Wrapf(err, "failed to create new dag builder helper")
+		rc.Close()
+		return nil, nil, oops.Wrapf(err, "failed to create new dag builder helper")
 	}
 
-	var n ipld.Node
-	switch opts.Layout {
-	case "trickle":
-		n, err = trickle.Layout(dbh)
-	case "balanced", "":
-		n, err = balanced.Layout(dbh)
-	default:
-		return nil, oops.Wrapf(err, "unknown layout: %s", opts.Layout)
-	}
+	ch := make(chan SyncResult, 1)
+	go func() {
+		defer rc.Close()
+		defer close(ch)
 
-	return n, oops.Wrapf(err, "failed to layout dag")
+		var n ipld.Node
+		switch opts.Layout {
+		case "trickle":
+			n, err = trickle.Layout(dbh)
+		case "balanced", "":
+			n, err = balanced.Layout(dbh)
+		default:
+			ch <- SyncResult{nil, oops.Wrapf(err, "unknown layout: %s", opts.Layout)}
+			return
+		}
+
+		if err != nil {
+			ch <- SyncResult{n, oops.Wrapf(err, "failed to layout dag")}
+			return
+		}
+
+		ch <- SyncResult{n, nil}
+	}()
+
+	return ch, progress, oops.Wrapf(err, "failed to layout dag")
 }

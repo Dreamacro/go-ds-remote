@@ -51,41 +51,9 @@ func (s *Source) isSubPath(path string) bool {
 	return !strings.Contains(rel, "..")
 }
 
-func (s *Source) GetPart(ctx context.Context, abspath string, offset uint64, size uint64) (io.ReadCloser, error) {
+func (s *Source) getFile(abspath string) (*os.File, error) {
 	if !s.isSubPath(abspath) {
 		return nil, &rs.CorruptReferenceError{
-			Code: rs.StatusOtherError,
-			Err:  errors.New("file not in root path"),
-		}
-	}
-
-	fi, err := os.Open(abspath)
-	if os.IsNotExist(err) {
-		return nil, &rs.CorruptReferenceError{
-			Code: rs.StatusFileNotFound,
-			Err:  err,
-		}
-	} else if err != nil {
-		return nil, &rs.CorruptReferenceError{
-			Code: rs.StatusFileError,
-			Err:  err,
-		}
-	}
-
-	_, err = fi.Seek(int64(offset), io.SeekStart)
-	if err != nil {
-		return nil, &rs.CorruptReferenceError{
-			Code: rs.StatusFileError,
-			Err:  err,
-		}
-	}
-
-	return &limitReader{f: fi, n: int64(size)}, nil
-}
-
-func (s *Source) Get(ctx context.Context, abspath string) (io.ReadCloser, uint64, error) {
-	if !s.isSubPath(abspath) {
-		return nil, 0, &rs.CorruptReferenceError{
 			Code: rs.StatusOtherError,
 			Err:  errors.New("file not in root path"),
 		}
@@ -93,15 +61,41 @@ func (s *Source) Get(ctx context.Context, abspath string) (io.ReadCloser, uint64
 
 	file, err := os.Open(abspath)
 	if os.IsNotExist(err) {
-		return nil, 0, &rs.CorruptReferenceError{
+		return nil, &rs.CorruptReferenceError{
 			Code: rs.StatusFileNotFound,
 			Err:  err,
 		}
 	} else if err != nil {
-		return nil, 0, &rs.CorruptReferenceError{
+		return nil, &rs.CorruptReferenceError{
 			Code: rs.StatusFileError,
 			Err:  err,
 		}
+	}
+
+	return file, nil
+}
+
+func (s *Source) GetPart(ctx context.Context, abspath string, offset uint64, size uint64) (io.ReadCloser, error) {
+	f, err := s.getFile(abspath)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = f.Seek(int64(offset), io.SeekStart)
+	if err != nil {
+		return nil, &rs.CorruptReferenceError{
+			Code: rs.StatusFileError,
+			Err:  err,
+		}
+	}
+
+	return &limitReader{f: f, n: int64(size)}, nil
+}
+
+func (s *Source) Get(ctx context.Context, abspath string) (io.ReadCloser, uint64, error) {
+	file, err := s.getFile(abspath)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	fi, err := file.Stat()
