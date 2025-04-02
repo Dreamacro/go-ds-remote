@@ -11,7 +11,6 @@ import (
 	remotestore "github.com/Dreamacro/go-ds-remote"
 	"github.com/Dreamacro/go-ds-remote/mount"
 	"github.com/Dreamacro/go-ds-remote/s3"
-	proto "github.com/gogo/protobuf/proto"
 	"github.com/ipfs/boxo/blockstore"
 	chunk "github.com/ipfs/boxo/chunker"
 	"github.com/ipfs/boxo/datastore/dshelp"
@@ -24,6 +23,7 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	proto "google.golang.org/protobuf/proto"
 )
 
 var minioAddr string

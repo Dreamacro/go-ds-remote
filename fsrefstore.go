@@ -6,7 +6,6 @@ import (
 	"io"
 	"path/filepath"
 
-	proto "github.com/gogo/protobuf/proto"
 	dshelp "github.com/ipfs/boxo/datastore/dshelp"
 	pb "github.com/ipfs/boxo/filestore/pb"
 	posinfo "github.com/ipfs/boxo/filestore/posinfo"
@@ -17,6 +16,7 @@ import (
 	dsq "github.com/ipfs/go-datastore/query"
 	ipld "github.com/ipfs/go-ipld-format"
 	mh "github.com/multiformats/go-multihash"
+	proto "google.golang.org/protobuf/proto"
 )
 
 // RemotestorePrefix identifies the key prefix for FileManager blocks.
@@ -132,19 +132,19 @@ func (f *RemoteManager) GetSize(ctx context.Context, c cid.Cid) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	return int(dobj.GetSize_()), nil
+	return int(dobj.GetSize()), nil
 }
 
 func (f *RemoteManager) readDataObj(ctx context.Context, m mh.Multihash, d *pb.DataObj) ([]byte, error) {
 	fullpath := filepath.FromSlash(d.GetFilePath())
 
-	reader, err := f.source.GetPart(ctx, fullpath, d.GetOffset(), d.GetSize_())
+	reader, err := f.source.GetPart(ctx, fullpath, d.GetOffset(), d.GetSize())
 	if err != nil {
 		return nil, &CorruptReferenceError{StatusFileError, err}
 	}
 	defer reader.Close()
 
-	outbuf := make([]byte, d.GetSize_())
+	outbuf := make([]byte, d.GetSize())
 	_, err = io.ReadFull(reader, outbuf)
 	if err == io.EOF || err == io.ErrUnexpectedEOF {
 		return nil, &CorruptReferenceError{StatusFileChanged, err}
@@ -215,9 +215,11 @@ func (f *RemoteManager) Put(ctx context.Context, b *posinfo.FilestoreNode) error
 func (f *RemoteManager) putTo(ctx context.Context, b *posinfo.FilestoreNode, to putter) error {
 	var dobj pb.DataObj
 
-	dobj.FilePath = filepath.ToSlash(b.PosInfo.FullPath)
-	dobj.Offset = b.PosInfo.Offset
-	dobj.Size_ = uint64(len(b.RawData()))
+	filePath := filepath.ToSlash(b.PosInfo.FullPath)
+	dobj.FilePath = &filePath
+	dobj.Offset = &b.PosInfo.Offset
+	size := uint64(len(b.RawData()))
+	dobj.Size = &size
 
 	data, err := proto.Marshal(&dobj)
 	if err != nil {
